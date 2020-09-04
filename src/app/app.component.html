@@ -1,0 +1,101 @@
+
+
+<div class="app-container">
+  <div class="controls-container">
+
+    <button
+      mat-raised-button
+      (click)="onToggleControls($event)">
+      <span *ngIf="enableControls$ | async">
+        Customer Mode
+      </span>
+      <span *ngIf="!(enableControls$ | async)">
+        Admin Mode
+      </span>
+    </button>
+
+    <!-- Control panel -->
+    <div *ngIf="enableControls$ | async" style="display: flex;"
+      class="admin-buttons-container">
+      <button
+        type="button"
+        mat-raised-button
+        (click)="onAddRow($event)">
+        Add Menu ITem
+      </button>
+
+      <button
+        type="button"
+        mat-raised-button
+        color="warn"
+        (click)="onDeleteSelected($event)">
+        Delete selected Item
+      </button>
+
+
+      <button
+        type="button"
+        mat-raised-button
+        (click)="onIncreasePrice($event)">
+        Increase Price by 10%
+      </button>
+
+
+      <button
+        type="button"
+        mat-raised-button
+        (click)="onGroup($event)">
+        Group
+      </button>
+
+      <button
+        type="button"
+        mat-raised-button
+        (click)="onToggleDisableSelectedRows($event)">
+        Enable / Disable selected rows
+      </button>
+    </div>
+
+    <input
+      matInput
+      type="search"
+      [(ngModel)]="quickFilterValue"
+      style="display: block"
+      placeholder="search..."
+      (input)="onQuickFilterInput($event)"
+      />
+  </div>
+
+
+  <ag-grid-angular
+    style="width: 100%; height: 500px;"
+    class="ag-theme-alpine"
+    [rowData]="rowData"
+    [columnDefs]="columnDefs"
+    [immutableData]="true"
+    [immutableColumns]="true"
+    [getRowNodeId]="getRowNodeId"
+    [frameworkComponents]="frameworkComponents"
+    [getRowStyle]="getRowStyle"
+    [defaultColDef]="defaultColDef"
+    (gridReady)="onGridReady($event)"
+    [rowSelection]="'multiple'"
+    [suppressRowClickSelection]="true"
+    [enableRangeSelection]="true"
+    [rowHeight]="100"
+    [groupIncludeTotalFooter]="true"
+    [getRowHeight]="getRowHeight"
+    [groupDefaultExpanded]="-1"
+    [groupSelectsChildren]="true"
+    [autoGroupColumnDef]="autoGroupColumnDef">
+  </ag-grid-angular>
+
+
+
+  <div class="store-row-data">
+    <h3> store row data </h3>
+    <pre>
+      {{(rowData$ | async | json )}}
+    </pre>
+  </div>
+</div>
