@@ -3,31 +3,26 @@ import { Component, OnInit } from '@angular/core';
 @Component({
   selector: 'app-editable-cell-renderer',
   template: `
-
-<div class="actions-container" >
-
-  <div  *ngIf="!isGroupNode">
-    <button
-    mat-stroked-button
-     (click)="onToggleEditable($event)">
-     {{buttonEditableText}}
-    </button>
+    <div class="actions-container" >
+      <div  *ngIf="!isGroupNode">
+        <button
+        mat-stroked-button
+        (click)="onToggleEditable($event)">
+        {{buttonEditableText}}
+        </button>
 
 
-
-    <button
-      type="button"
-      color="primary"
-      mat-stroked-button
-      color="warn"
-      (click)="onDeleteRow($event)"
-      >
-      Delete
-    </button>
-  <div>
-</div>
-
-
+        <button
+          type="button"
+          color="primary"
+          mat-stroked-button
+          color="warn"
+          (click)="onDeleteRow($event)"
+          >
+          Delete
+        </button>
+      <div>
+    </div>
   `,
   styleUrls: ['./editable-cell-renderer.component.scss']
 })

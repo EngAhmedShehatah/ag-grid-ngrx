@@ -1,8 +1,16 @@
 import { produce } from 'immer';
 import { QuantityCellRendererComponent } from './quantity-cell-renderer/quantity-cell-renderer.component';
 import {
-  AddRowAction, DeleteRowAction, UpdateRows, UpdateRow,
-  ToggleRowEditable, ToggleControls, DeleteBatchRows, IncreasePrice, ToggleDisableRows
+  AddRowAction,
+  DeleteRowAction,
+  UpdateRow,
+  ToggleRowEditable,
+  ToggleControls,
+  DeleteBatchRows,
+  IncreasePrice,
+  ToggleDisableRows,
+  LoadAdminColumnDefs,
+  LoadCustumerColumnDefs, ToggleGroupByCategory
 } from './grid-store/actions/grid.actions';
 import { Component, } from '@angular/core';
 import { Store } from '@ngrx/store';
@@ -22,31 +30,32 @@ export class AppComponent {
 
   constructor(private store: Store<any>) {
 
+    this.loadAdminColumnDefs();
+
+
     this.rowData$ = this.store.select(store => store.grid.rowData);
+    this.columnDefs$ = this.store.select(store => store.grid.columnDefs);
+
     this.enableControls$ = this.store.select(store => store.grid.enableControls);
-    this.rowData$.subscribe((data) => {
-      this.rowData = data.map(row => {
-        return {
-          ...row
-        };
-      });
-    });
-
-
     this.enableControls$.subscribe(isEnabled => {
       if (isEnabled) {
-        this.columnDefs = this.processColumnDefs(this.columnDefsWithControls);
+        this.loadAdminColumnDefs();
       } else {
-        this.columnDefs = this.processColumnDefs(this.columnDefsNormal);
+        this.loadCustumerColumnDefs();
       }
     });
-
-
   }
+
+
   rowData$: Observable<any>;
+  columnDefs$: Observable<any>;
   enableControls$: Observable<any>;
+
+
+  gridApi: any;
+  columnApi: any;
+  quickFilterValue = '';
   groupByCategory = true;
-  columnDefs: any = [];
   defaultColDef: any = {
     valueSetter: (params) => {
       let newVal = params.newValue;
@@ -71,169 +80,24 @@ export class AppComponent {
   autoGroupColumnDef = {
     headerName: 'Category'
   };
-  gridApi: any;
-  columnApi: any;
-  rowData = [];
-  quickFilterValue = '';
 
-
-  // admin mode column defitnitions
-  columnDefsWithControls: any = [
-    {
-      checkboxSelection: true,
-      colId: 'editable',
-      headerName: 'actions',
-      cellRenderer: 'editableCellRendererComponent',
-      cellRendererParams: {
-        toggleEditable: this.onToggleEditable.bind(this),
-        deleteRow: this.onDeleteRow.bind(this)
-      },
-      field: 'editable',
-      cellStyle: { overflow: 'hidden' }
-    },
-    {
-      colId: 'imgUrl',
-      editable: this.editable,
-      field: 'imgUrl',
-      headerName: 'picture',
-      cellStyle: {
-        'white-space': 'normal !important'
-      },
-      cellRenderer: (params) => {
-        if (!params.node.group) { return `<img  style="width: auto; height: 100%" src="${params.data.imgUrl}"/>`; }
-        return params.value;
-      }
-    },
-    {
-      colId: 'price',
-      headerName: 'price',
-      field: 'price',
-      valueFormatter: this.currencyFormatter,
-      editable: this.editable,
-    },
-    {
-      colId: 'quantity',
-      headerName: 'quantity',
-      field: 'quantity',
-      editable: this.editable,
-    },
-    {
-      colId: 'category',
-      headerName: 'category',
-      field: 'category',
-      enableRowGroup: true,
-      cellEditor: 'agSelectCellEditor',
-      cellEditorParams: { values: ['drink', 'starter', 'main', 'desert'] },
-      editable: this.editable,
-      rowGroup: this.groupByCategory
-    },
-    {
-      colId: 'id',
-      headerName: 'id',
-      field: 'id',
-      hide: true,
-    },
-    {
-      colId: 'name',
-      headerName: 'name',
-      field: 'name',
-      editable: this.editable,
-    },
-
-    {
-      colId: 'total',
-      headerName: 'total',
-      aggFunc: 'sum',
-      valueFormatter: this.currencyFormatter,
-      valueGetter: (params) => {
-        if (!params.node.group) { return params.data.quantity * params.data.price; }
-        return params.value;
-      }
-    },
-  ];
-
-  // custumer mode column defitnitions
-  columnDefsNormal: any = [
-    {
-      colId: 'imgUrl',
-      editable: this.editable,
-      field: 'imgUrl',
-      headerName: 'picture',
-      cellStyle: {
-        'white-space': 'normal !important'
-      },
-      cellRenderer: (params) => {
-        if (!params.node.group) { return `<img  style="width: auto; height: 100%" src="${params.data.imgUrl}"/>`; }
-        return params.value;
-      }
-    },
-
-    {
-      colId: 'price',
-      headerName: 'price',
-      field: 'price',
-      valueFormatter: this.currencyFormatter,
-      editable: this.editable,
-    },
-
-    {
-      colId: 'quantity',
-      headerName: 'quantity',
-      field: 'quantity',
-      editable: this.editable,
-    },
-    {
-      colId: 'category',
-      headerName: 'category',
-      field: 'category',
-      enableRowGroup: true,
-      hide: true,
-      rowGroup: this.groupByCategory
-    },
-    {
-      colId: 'editable',
-      width: 250,
-
-      headerName: 'actions',
-      cellRenderer: 'editableCellRendererComponent',
-      cellRendererParams: {
-        toggleEditable: this.onToggleEditable.bind(this),
-        deleteRow: this.onDeleteRow.bind(this)
-      },
-      field: 'editable',
-      hide: true,
-    },
-    {
-      colId: 'id',
-      headerName: 'id',
-      field: 'id',
-      hide: true,
-    },
-    {
-      colId: 'name',
-      headerName: 'name',
-      field: 'name',
-      editable: this.editable,
-    },
-
-
-
-    {
-      colId: 'total',
-      headerName: 'total',
-      aggFunc: 'sum',
-      valueFormatter: this.currencyFormatter,
-      valueGetter: (params) => {
-        if (!params.node.group) { return params.data.quantity * params.data.price; }
-        return params.value;
-      }
-    },
-  ];
 
   frameworkComponents: any = {
     editableCellRendererComponent: EditableCellRendererComponent,
     quantityCellRendererComponent: QuantityCellRendererComponent
   };
+
+
+
+
+  loadAdminColumnDefs() {
+    this.store.dispatch(new LoadAdminColumnDefs(this));
+  }
+
+
+  loadCustumerColumnDefs() {
+    this.store.dispatch(new LoadCustumerColumnDefs(this));
+  }
 
 
 
@@ -244,7 +108,7 @@ export class AppComponent {
     return 100;
   }
 
-  editable(params) {
+  editable(params): boolean {
     if (!params.node.group) {
       return params.node.data.editable;
     }
@@ -268,6 +132,10 @@ export class AppComponent {
     return data.id;
   }
 
+  onFirstDataRendered(params) {
+    params.api.sizeColumnsToFit();
+  }
+
   getRowStyle(params) {
     if (!params.node.group) {
       if (!params.node.data.editable) {
@@ -282,20 +150,12 @@ export class AppComponent {
     }
   }
 
-  // LIFECYCLE METHODS
 
 
 
   // LOCAL STATE CHANGE
   onGroup() {
-    this.groupByCategory = !this.groupByCategory;
-
-    const newCols = produce(this.columnDefs, draft => {
-      const categoryCol = draft.find(col => col.colId === 'category');
-      categoryCol.rowGroup = this.groupByCategory;
-    });
-
-    this.gridApi.setColumnDefs(newCols);
+    this.store.dispatch(new ToggleGroupByCategory());
   }
 
   onQuickFilterInput(e) {
@@ -343,15 +203,4 @@ export class AppComponent {
   }
 
 
-
-  // HELPERS
-  // adds rowGroup true or false to the category column
-  processColumnDefs(columnDefs) {
-    const cols = produce(columnDefs, draftCols => {
-      const categoryCol = draftCols.find(col => col.colId === 'category');
-      categoryCol.rowGroup = this.groupByCategory;
-    });
-
-    return cols;
-  }
 }

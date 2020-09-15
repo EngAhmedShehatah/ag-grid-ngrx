@@ -4,6 +4,8 @@ import { v4 as uuid } from 'uuid';
 import produce from 'immer';
 
 const initialState = {
+
+    columnDefs: [],
     rowData: [
         // tslint:disable: max-line-length
         { id: uuid(), name: 'Coffee', category: 'drink', editable: true, quantity: 1, price: 15, imgUrl: `../../../assets/images/coffee.png` },
@@ -20,15 +22,19 @@ const initialState = {
         { id: uuid(), name: 'Cheese board', category: 'dessert', editable: false, quantity: 20, price: 23, imgUrl: `../../../assets/images/cheese.png` },
     ],
     enableControls: false,
+    groupByCategory: false,
 };
 
 
 export function GridReducer(state = initialState, action) {
     switch (action.type) {
+        case GridActionTypes.TOGGLE_GROUP_BY_CATEGORY: return toggleGrouppByCategory(state, action);
+
+        case GridActionTypes.LOAD_ADMIN_COLUMN_DEFS: return loadAdminColumnDefs(state, action);
+        case GridActionTypes.LOAD_CUSTUMER_COLUMN_DEFS: return loadCustumerAdminColumnDefs(state, action);
         case GridActionTypes.ADD_ROW: return addRow(state, action);
         case GridActionTypes.DELETE_ROW: return deleteRow(state, action);
         case GridActionTypes.DELETE_BATCH_ROWS: return deleteBatchRows(state, action);
-        case GridActionTypes.UPDATE_ROWS: return updateRows(state, action);
         case GridActionTypes.UPDATE_ROW: return updateRow(state, action);
         case GridActionTypes.TOGGLE_ROW_EDITABLE: return toggleRowsEditable(state, action);
         case GridActionTypes.TOGGLE_CONTROLS: return toggleControls(state, action);
@@ -39,6 +45,39 @@ export function GridReducer(state = initialState, action) {
     }
 }
 
+
+
+function toggleGrouppByCategory(state, action) {
+
+    console.log('raan');
+    return produce(state, draftState => {
+
+        const toggledGroup: boolean = !draftState.groupByCategory;
+
+        const categoryCol = draftState.columnDefs.find(colDef => colDef.colId === 'category');
+        categoryCol.rowGroup = toggledGroup;
+        draftState.groupCyCategory = toggledGroup;
+    });
+
+}
+
+
+
+function loadAdminColumnDefs(state, action) {
+    const component = action.payload;
+    return {
+        ...state,
+        columnDefs: ADMIN_COLS(component)
+    };
+}
+
+function loadCustumerAdminColumnDefs(state, action) {
+    const component = action.payload;
+    return {
+        ...state,
+        columnDefs: CUSTUMER_COLS(component)
+    };
+}
 
 
 function addRow(state, action) {
@@ -76,35 +115,21 @@ function deleteBatchRows(state, action) {
     };
 }
 
-function updateRows(state, action) {
-    const updatedRowData = state.rowData.slice().map(row => {
-        return {
-            ...row,
-            quantity: row.quantity !== undefined ? row.quantity + 10 : 1
-        };
-    });
 
-    return {
-        ...state,
-        rowData: updatedRowData
-    };
-}
 
 
 function updateRow(state, action) {
-    const nextState = produce(state, draftState => {
+    return produce(state, draftState => {
         const indx = draftState.rowData.findIndex((data) => data.id === action.nodeId);
         draftState.rowData[indx][action.colId] = action.value;
     });
-    return nextState;
 }
 
 function toggleRowsEditable(state, action) {
-    const nextState = produce(state, draftState => {
+    return produce(state, draftState => {
         const indx = state.rowData.findIndex((data) => data.id === action.payload);
         draftState.rowData[indx] = { ...draftState.rowData[indx], editable: !draftState.rowData[indx].editable };
     });
-    return nextState;
 }
 
 function toggleControls(state, action) {
@@ -118,12 +143,11 @@ function toggleControls(state, action) {
 
 function increasePrice(state, action) {
     const percentage = action.payload;
-    const nextState = produce(state, draftState => {
+    return produce(state, draftState => {
         draftState.rowData.forEach(row => row.price =
             +Number(row.price + row.price * percentage / 100).toFixed(2)
         );
     });
-    return nextState;
 }
 
 
@@ -134,7 +158,7 @@ function toggleDisableRows(state, action) {
         return state;
     }
 
-    const nextState = produce(state, draftState => {
+    return produce(state, draftState => {
         const rowsToToggle = draftState.rowData.filter(row => ids.includes(row.id));
         const enable = !rowsToToggle[0].editable;
 
@@ -143,7 +167,158 @@ function toggleDisableRows(state, action) {
         });
     });
 
-    return nextState;
 }
 
 
+
+
+function ADMIN_COLS(comp) {
+    return [
+        {
+            checkboxSelection: true,
+            colId: 'editable',
+            headerName: 'actions',
+            cellRenderer: 'editableCellRendererComponent',
+            cellRendererParams: {
+                toggleEditable: comp.onToggleEditable.bind(comp),
+                deleteRow: comp.onDeleteRow.bind(comp)
+            },
+            field: 'editable',
+            cellStyle: { overflow: 'hidden' }
+        },
+        {
+            colId: 'imgUrl',
+            editable: comp.editable,
+            field: 'imgUrl',
+            headerName: 'picture',
+            cellStyle: {
+                'white-space': 'normal !important'
+            },
+            cellRenderer: (params) => {
+                if (!params.node.group) { return `<img  style="width: auto; height: 100%" src="${params.data.imgUrl}"/>`; }
+                return params.value;
+            }
+        },
+        {
+            colId: 'price',
+            headerName: 'price',
+            field: 'price',
+            valueFormatter: comp.currencyFormatter,
+            editable: comp.editable,
+        },
+        {
+            colId: 'quantity',
+            headerName: 'quantity',
+            field: 'quantity',
+            editable: comp.editable,
+        },
+        {
+            colId: 'category',
+            headerName: 'category',
+            field: 'category',
+            enableRowGroup: true,
+            cellEditor: 'agSelectCellEditor',
+            cellEditorParams: { values: ['drink', 'starter', 'main', 'desert'] },
+            editable: comp.editable,
+            rowGroup: comp.groupByCategory
+        },
+        {
+            colId: 'id',
+            headerName: 'id',
+            field: 'id',
+            hide: true,
+        },
+        {
+            colId: 'name',
+            headerName: 'name',
+            field: 'name',
+            editable: comp.editable,
+        },
+
+        {
+            colId: 'total',
+            headerName: 'total',
+            aggFunc: 'sum',
+            valueFormatter: comp.currencyFormatter,
+            valueGetter: (params) => {
+                if (!params.node.group) { return params.data.quantity * params.data.price; }
+                return params.value;
+            }
+        },
+    ];
+}
+
+
+function CUSTUMER_COLS(comp) {
+    return [{
+        colId: 'imgUrl',
+        editable: comp.editable,
+        field: 'imgUrl',
+        headerName: 'picture',
+        cellStyle: {
+            'white-space': 'normal !important'
+        },
+        cellRenderer: (params) => {
+            if (!params.node.group) { return `<img  style="width: auto; height: 100%" src="${params.data.imgUrl}"/>`; }
+            return params.value;
+        }
+    },
+    {
+        colId: 'price',
+        headerName: 'price',
+        field: 'price',
+        valueFormatter: comp.currencyFormatter,
+        editable: comp.editable,
+    },
+
+    {
+        colId: 'quantity',
+        headerName: 'quantity',
+        field: 'quantity',
+        editable: comp.editable,
+    },
+    {
+        colId: 'category',
+        headerName: 'category',
+        field: 'category',
+        enableRowGroup: true,
+        hide: true,
+        rowGroup: comp.groupByCategory
+    },
+    {
+        colId: 'editable',
+        width: 250,
+
+        headerName: 'actions',
+        cellRenderer: 'editableCellRendererComponent',
+        cellRendererParams: {
+            toggleEditable: comp.onToggleEditable.bind(comp),
+            deleteRow: comp.onDeleteRow.bind(comp)
+        },
+        field: 'editable',
+        hide: true,
+    },
+    {
+        colId: 'id',
+        headerName: 'id',
+        field: 'id',
+        hide: true,
+    },
+    {
+        colId: 'name',
+        headerName: 'name',
+        field: 'name',
+        editable: comp.editable,
+    },
+    {
+        colId: 'total',
+        headerName: 'total',
+        aggFunc: 'sum',
+        valueFormatter: comp.currencyFormatter,
+        valueGetter: (params) => {
+            if (!params.node.group) { return params.data.quantity * params.data.price; }
+            return params.value;
+        }
+    },
+    ];
+}

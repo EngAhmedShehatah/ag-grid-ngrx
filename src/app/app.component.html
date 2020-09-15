@@ -70,8 +70,8 @@
   <ag-grid-angular
     style="width: 100%; height: 500px;"
     class="ag-theme-alpine"
-    [rowData]="rowData"
-    [columnDefs]="columnDefs"
+    [rowData]="rowData$ | async"
+    [columnDefs]="columnDefs$ | async"
     [immutableData]="true"
     [immutableColumns]="true"
     [getRowNodeId]="getRowNodeId"
@@ -79,6 +79,7 @@
     [getRowStyle]="getRowStyle"
     [defaultColDef]="defaultColDef"
     (gridReady)="onGridReady($event)"
+    (firstDataRendered)="onFirstDataRendered($event)"
     [rowSelection]="'multiple'"
     [suppressRowClickSelection]="true"
     [enableRangeSelection]="true"
