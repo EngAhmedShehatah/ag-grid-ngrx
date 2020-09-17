@@ -29,7 +29,6 @@ const initialState = {
 export function GridReducer(state = initialState, action) {
     switch (action.type) {
         case GridActionTypes.TOGGLE_GROUP_BY_CATEGORY: return toggleGrouppByCategory(state, action);
-
         case GridActionTypes.LOAD_ADMIN_COLUMN_DEFS: return loadAdminColumnDefs(state, action);
         case GridActionTypes.LOAD_CUSTUMER_COLUMN_DEFS: return loadCustumerAdminColumnDefs(state, action);
         case GridActionTypes.ADD_ROW: return addRow(state, action);
@@ -48,17 +47,11 @@ export function GridReducer(state = initialState, action) {
 
 
 function toggleGrouppByCategory(state, action) {
-
-    console.log('raan');
     return produce(state, draftState => {
-
-        const toggledGroup: boolean = !draftState.groupByCategory;
-
-        const categoryCol = draftState.columnDefs.find(colDef => colDef.colId === 'category');
-        categoryCol.rowGroup = toggledGroup;
-        draftState.groupCyCategory = toggledGroup;
+        const toggled: boolean = !state.groupByCategory;
+        draftState.groupByCategory = toggled;
+        draftState.columnDefs.find(colDef => colDef.colId === 'category').rowGroup = toggled;
     });
-
 }
 
 
@@ -175,16 +168,18 @@ function toggleDisableRows(state, action) {
 function ADMIN_COLS(comp) {
     return [
         {
+            headerCheckboxSelection: true,
             checkboxSelection: true,
             colId: 'editable',
+            width: 250,
             headerName: 'actions',
             cellRenderer: 'editableCellRendererComponent',
             cellRendererParams: {
                 toggleEditable: comp.onToggleEditable.bind(comp),
-                deleteRow: comp.onDeleteRow.bind(comp)
+                deleteRow: comp.onDeleteRow.bind(comp),
             },
             field: 'editable',
-            cellStyle: { overflow: 'hidden' }
+            hide: false,
         },
         {
             colId: 'imgUrl',
@@ -195,7 +190,7 @@ function ADMIN_COLS(comp) {
                 'white-space': 'normal !important'
             },
             cellRenderer: (params) => {
-                if (!params.node.group) { return `<img  style="width: auto; height: 100%" src="${params.data.imgUrl}"/>`; }
+                if (!params.node.group) { return `<img  style="width: auto; height: 100px" src="${params.data.imgUrl}"/>`; }
                 return params.value;
             }
         },
@@ -236,6 +231,7 @@ function ADMIN_COLS(comp) {
         },
 
         {
+
             colId: 'total',
             headerName: 'total',
             aggFunc: 'sum',
@@ -250,75 +246,76 @@ function ADMIN_COLS(comp) {
 
 
 function CUSTUMER_COLS(comp) {
-    return [{
-        colId: 'imgUrl',
-        editable: comp.editable,
-        field: 'imgUrl',
-        headerName: 'picture',
-        cellStyle: {
-            'white-space': 'normal !important'
+    return [
+        {
+            colId: 'editable',
+            width: 250,
+            headerName: 'actions',
+            cellRenderer: 'editableCellRendererComponent',
+            cellRendererParams: {
+                toggleEditable: comp.onToggleEditable.bind(comp),
+                deleteRow: comp.onDeleteRow.bind(comp)
+            },
+            field: 'editable',
+            hide: true,
         },
-        cellRenderer: (params) => {
-            if (!params.node.group) { return `<img  style="width: auto; height: 100%" src="${params.data.imgUrl}"/>`; }
-            return params.value;
-        }
-    },
-    {
-        colId: 'price',
-        headerName: 'price',
-        field: 'price',
-        valueFormatter: comp.currencyFormatter,
-        editable: comp.editable,
-    },
-
-    {
-        colId: 'quantity',
-        headerName: 'quantity',
-        field: 'quantity',
-        editable: comp.editable,
-    },
-    {
-        colId: 'category',
-        headerName: 'category',
-        field: 'category',
-        enableRowGroup: true,
-        hide: true,
-        rowGroup: comp.groupByCategory
-    },
-    {
-        colId: 'editable',
-        width: 250,
-
-        headerName: 'actions',
-        cellRenderer: 'editableCellRendererComponent',
-        cellRendererParams: {
-            toggleEditable: comp.onToggleEditable.bind(comp),
-            deleteRow: comp.onDeleteRow.bind(comp)
+        {
+            colId: 'imgUrl',
+            editable: comp.editable,
+            field: 'imgUrl',
+            headerName: 'picture',
+            cellStyle: {
+                'white-space': 'normal !important'
+            },
+            cellRenderer: (params) => {
+                if (!params.node.group) { return `<img  style="width: auto; height: 100px" src="${params.data.imgUrl}"/>`; }
+                return params.value;
+            }
         },
-        field: 'editable',
-        hide: true,
-    },
-    {
-        colId: 'id',
-        headerName: 'id',
-        field: 'id',
-        hide: true,
-    },
-    {
-        colId: 'name',
-        headerName: 'name',
-        field: 'name',
-        editable: comp.editable,
-    },
-    {
-        colId: 'total',
-        headerName: 'total',
-        aggFunc: 'sum',
-        valueFormatter: comp.currencyFormatter,
-        valueGetter: (params) => {
-            if (!params.node.group) { return params.data.quantity * params.data.price; }
-            return params.value;
-        }
-    },
+        {
+            colId: 'price',
+            headerName: 'price',
+            field: 'price',
+            valueFormatter: comp.currencyFormatter,
+            editable: comp.editable,
+        },
+
+        {
+            colId: 'quantity',
+            headerName: 'quantity',
+            field: 'quantity',
+            editable: comp.editable,
+        },
+        {
+            colId: 'category',
+            headerName: 'category',
+            field: 'category',
+            enableRowGroup: true,
+            hide: true,
+            rowGroup: comp.groupByCategory
+        },
+
+        {
+            colId: 'id',
+            headerName: 'id',
+            field: 'id',
+            hide: true,
+        },
+        {
+            colId: 'name',
+            headerName: 'name',
+            field: 'name',
+            editable: comp.editable,
+        },
+        {
+            colId: 'total',
+            headerName: 'total',
+            aggFunc: 'sum',
+            valueFormatter: comp.currencyFormatter,
+            valueGetter: (params) => {
+                if (!params.node.group) { return params.data.quantity * params.data.price; }
+                return params.value;
+            }
+        },
     ];
 }

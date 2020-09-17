@@ -36,6 +36,7 @@ export class AppComponent {
     this.rowData$ = this.store.select(store => store.grid.rowData);
     this.columnDefs$ = this.store.select(store => store.grid.columnDefs);
 
+
     this.enableControls$ = this.store.select(store => store.grid.enableControls);
     this.enableControls$.subscribe(isEnabled => {
       if (isEnabled) {
@@ -50,12 +51,9 @@ export class AppComponent {
   rowData$: Observable<any>;
   columnDefs$: Observable<any>;
   enableControls$: Observable<any>;
-
-
   gridApi: any;
   columnApi: any;
   quickFilterValue = '';
-  groupByCategory = true;
   defaultColDef: any = {
     valueSetter: (params) => {
       let newVal = params.newValue;
@@ -78,9 +76,8 @@ export class AppComponent {
     }
   };
   autoGroupColumnDef = {
-    headerName: 'Category'
+    headerName: 'Category',
   };
-
 
   frameworkComponents: any = {
     editableCellRendererComponent: EditableCellRendererComponent,
@@ -98,7 +95,6 @@ export class AppComponent {
   loadCustumerColumnDefs() {
     this.store.dispatch(new LoadCustumerColumnDefs(this));
   }
-
 
 
   // GRID CALLBACKS
@@ -152,17 +148,19 @@ export class AppComponent {
 
 
 
-
   // LOCAL STATE CHANGE
-  onGroup() {
-    this.store.dispatch(new ToggleGroupByCategory());
-  }
+
 
   onQuickFilterInput(e) {
     this.gridApi.setQuickFilter(e.target.value);
   }
 
   // ACTIONS
+
+  onGroup() {
+    this.store.dispatch(new ToggleGroupByCategory());
+  }
+
   onAddRow() {
     this.store.dispatch(new AddRowAction({
       id: uuid(),
@@ -201,6 +199,5 @@ export class AppComponent {
     const nodeIds = this.gridApi.getSelectedNodes().map(node => node.id);
     this.store.dispatch(new DeleteBatchRows(nodeIds));
   }
-
 
 }
