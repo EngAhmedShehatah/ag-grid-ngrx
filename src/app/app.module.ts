@@ -5,12 +5,12 @@ import { AppComponent } from './app.component';
 import { StoreModule } from '@ngrx/store';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 import { environment } from '../environments/environment';
-import { AgGridModule } from 'ag-grid-angular';
 import { GridReducer } from './grid-store/reducers/grid.reducer';
 import { EditableCellRendererComponent } from './editable-cell-renderer/editable-cell-renderer.component';
 import { QuantityCellRendererComponent } from './quantity-cell-renderer/quantity-cell-renderer.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { MatButtonModule } from '@angular/material';
+import {MatButtonModule} from '@angular/material/button';
+import { AgGridModule } from 'ag-grid-angular';
 
 
 @NgModule({
@@ -20,7 +20,8 @@ import { MatButtonModule } from '@angular/material';
     QuantityCellRendererComponent,
   ],
   imports: [
-    AgGridModule.withComponents([EditableCellRendererComponent, QuantityCellRendererComponent, ]),
+    // AgGridModule.withComponents([EditableCellRendererComponent, QuantityCellRendererComponent, ]),
+    AgGridModule,
     BrowserModule,
     FormsModule,
     StoreModule.forRoot({
